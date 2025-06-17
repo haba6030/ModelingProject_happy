@@ -1,29 +1,8 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 from cmdstanpy import install_cmdstan
 install_cmdstan()
-
-
-# In[2]:
-
-
 from cmdstanpy import CmdStanModel
-
-
-# In[3]:
-
-
 import os
 from scipy.stats import norm
-
-
-# In[4]:
-
-
 import random
 import numpy as np
 import pandas as pd
@@ -43,68 +22,18 @@ import json
 from tqdm import tqdm
 
 
-# # Import data
-
-# In[7]:
-
-
+# Import data
 dfBlInfo = pd.read_csv("combined_participant_info.csv")
 dfBlTrial = pd.read_csv("Blain_trials_modified.csv")
-
-
-# In[8]:
-
-
 dfBlTrial['choseRisky'] = 1.0
 
 
-# In[9]:
-
-
-# dfRtTrial = pd.read_csv("Rutledge_trials_modified.csv")
-# dfRtInfo = pd.read_csv("Rutledge_info_modified.csv")
-
-
-# In[10]:
-
-
-print(dfBlInfo.shape)
-print(dfBlTrial.shape)
-# print(dfRtInfo.shape)
-# print(dfRtTrial.shape)
-
-
-# In[11]:
-
-
-dfBlTrial
-
-
-# In[12]:
-
-
-# # Fortest
-# print("For test")
-# dfBlInfo = dfBlInfo[:10]
-# dfBlTrial = dfBlTrial[:1600]
-
-
-# In[13]:
-
-
-# print(dfBlInfo.shape)
-# print(dfBlTrial.shape)
-
-
-# # Modeling 1 - Original Happiness Model
+# Modeling 1 - Original Happiness Model
 # Apply original Stan model in data
 
 # ## MLE
 
-# In[51]:
-
-
-# 📌 2. Overall model
+# Overall model
 def predict_happiness(params, CR, EV, RPE, chose_risky):
     w0, w_CR, w_EV, w_RPE, gamma = params
     T = len(CR)
@@ -135,10 +64,10 @@ def predict_happiness(params, CR, EV, RPE, chose_risky):
     return mu
 
 
-# In[52]:
 
 
-# 📌 3. Negative loglikelihood
+
+# Negative loglikelihood
 def nll_rated(params, CR, EV, RPE, chose_risky, rated_mask, H_obs):
     w0, w_CR, w_EV, w_RPE, gamma = params
 
@@ -149,12 +78,12 @@ def nll_rated(params, CR, EV, RPE, chose_risky, rated_mask, H_obs):
     return negloglik
 
 
-# In[53]:
+
 
 
 from sklearn.metrics import mean_squared_error, r2_score
 
-# 📌 4. Evaluate model
+# Evaluate model
 def evaluate_mle(y_true, y_pred, log_likelihood, k_params):
     n = len(y_true)
     rmse = np.sqrt(mean_squared_error(y_true, y_pred))
@@ -170,7 +99,7 @@ def evaluate_mle(y_true, y_pred, log_likelihood, k_params):
     }
 
 
-# In[54]:
+
 
 
 # 참가자별 MLE
@@ -234,43 +163,14 @@ def fit_mle_per_participant(df_trials, id_x = "id", happiness = "happiness",
     return df_result, df_eval
 
 
-# In[55]:
-
-
-# #Rutledge
-# # fit_mle_per_participant(df_trials, id_x, happiness_z, CR, winValue, loseValue, prob1, prob2):
-
-# df = dfRtTrial 
-# df_params_Rt, df_eval_Rt = fit_mle_per_participant(df)
-
-
-# In[56]:
-
-
-# print(df_params_Rt)
-# print(df_eval_Rt)
-
-
-# In[1]:
-
-
-# df = dfBlTrial
-# print("MLE")
-# df_params_Bl, df_eval_Bl = fit_mle_per_participant(df)
-
-
-# In[17]:
-
-
-# df_params_Bl.to_csv("mle_bla_1st_raw_results.csv", index=False)
-# df_eval_Bl.to_csv("mle_bla_1st_raw_evals.csv", index=False)
+df = dfBlTrial
+print("MLE")
+df_params_Bl, df_eval_Bl = fit_mle_per_participant(df)
+df_params_Bl.to_csv("mle_bla_1st_raw_results.csv", index=False)
+df_eval_Bl.to_csv("mle_bla_1st_raw_evals.csv", index=False)
 
 
 # ## Individual Hierarchical
-
-# In[27]:
-
-
 # Matrix 함수: for json
 def to_matrix(df, varname, fill=0):
     mat = np.full((N, T), fill, dtype=np.float32)
@@ -286,61 +186,7 @@ def to_int_matrix(df, varname, fill=0):
         mat[i, :len(values)] = values
     return mat
 
-
-# In[28]:
-
-
-# df = dfRtTrial
-
-# participants = df["id"].unique()
-# N = len(participants)
-# T = df.groupby("id").size().max()  # 160으로 동일
-
-# Tsubj = df.groupby("id").size().values.astype(int)
-# gain = to_matrix(df, "mag1")
-# loss = to_matrix(df, "mag2")
-# prob1 = to_matrix(df, "prob1")
-# prob2 = to_matrix(df, "prob2")
-# cert = to_matrix(df, "CR")
-# gamble = to_matrix(df, "choseRisky")
-# outcome = to_matrix(df, "outcome")
-# happy = to_matrix(df, "happiness", fill=-999)  
-
-# # Stan 데이터 구성
-# stan_data = {
-#     "N": N,
-#     "T": T,
-#     "Tsubj": Tsubj.tolist(),
-#     "gain": gain.tolist(),
-#     "loss": loss.tolist(),
-#     "prob1": prob1.tolist(),
-#     "prob2": prob2.tolist(),
-#     "cert": cert.tolist(),
-#     "gamble": cert.tolist(),
-#     "outcome": outcome.tolist(),
-#     "happy": happy.tolist(),
-# }
-
-# with open("rtdata_1st.json", "w") as f:
-#     json.dump(stan_data, f)
-
-
-# In[50]:
-
-
 df = dfBlTrial 
-# print(df.groupby("id").size().to_string())
-print(df["id"].unique().shape)
-
-
-# In[2]:
-
-
-print(df)
-
-
-# In[31]:
-
 
 # happiness 관측값 위치 확인
 df = dfBlTrial
@@ -369,7 +215,7 @@ for i in range(N):
             T_max = T_temp
 
 
-# In[32]:
+
 
 
 df = dfBlTrial
@@ -378,7 +224,6 @@ df["gamble"] = 1
 participants = df["id"].unique()
 N = len(participants)
 T = df.groupby("id").size().max()  # 160으로 동일
-print(T)
 
 Tsubj = df.groupby("id").size().values.astype(int)
 gain = to_matrix(df, "mag1_norm")
@@ -412,7 +257,7 @@ with open("bldata_1st.json", "w") as f:
     json.dump(stan_data, f)
 
 
-# In[33]:
+
 
 
 def save_stan_outputs_and_evaluation(fit, prefix="model", trace_chunk_size=20):
@@ -490,7 +335,6 @@ def save_stan_outputs_and_evaluation(fit, prefix="model", trace_chunk_size=20):
     gen_quant_stats = {}
 
     for var in gen_quant_vars:
-        print(var)
         if var in fit.stan_variables():
             data = fit.stan_variable(var)
             gen_quant_stats[var] = {
@@ -542,102 +386,25 @@ def save_stan_outputs_and_evaluation(fit, prefix="model", trace_chunk_size=20):
     }
 
 
-# ### 예측 시작
+### 예측 시작
 
-# #### Blain
-
-# In[50]:
-
-
+#### Blain
 model = CmdStanModel(stan_file='happy_2014_indiv.stan')
-
-
-# In[51]:
-
 
 fit = model.sample(data="bldata_1st.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 
                    seed=2025, adapt_delta=0.95, max_treedepth=15,
                    show_progress=True)
-
-
-# In[52]:
-
-
 results = save_stan_outputs_and_evaluation(fit, prefix="Ind_raw_bla_1st")
 print(results["eval_csv"])  # 저장된 평가 지표 파일 경로
 
 
-# ## HBA
+## HBA
 
-# ### Stan Compile
-
-# In[ ]:
-
-
-# model = CmdStanModel(stan_file='happy_2014.stan')
-
-
-# In[ ]:
-
-
-# fit = model.sample(data="rtdata_1st.json", chains=4, parallel_chains=4, 
-#                    iter_warmup=1000, iter_sampling=1000, 
-#                    seed=2025, adapt_delta=0.95,
-#                    show_progress=True)
-
-
-# In[ ]:
-
-
-# results = save_stan_outputs_and_evaluation(fit, prefix="HBA_raw_rut_1st")
-# print(results["eval_csv"])  # 저장된 평가 지표 파일 경로
-
-
-# In[4]:
-
-
+### Stan Compile
 model = CmdStanModel(stan_file='happy_2014.stan')
-
-
-# In[46]:
-
-
 fit = model.sample(data="bldata_1st.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 
                    seed=2025, adapt_delta=0.95, max_treedepth=15,
                    show_progress=True)
-
-
-# In[47]:
-
-
 results = save_stan_outputs_and_evaluation(fit, prefix="HBA_raw_bla_1st")
-print(results["eval_csv"])  # 저장된 평가 지표 파일 경로
-
-
-# In[ ]:
-
-
-# # 6. 결과 요약 summary → CSV 저장
-# summary = fit.summary()
-# summary.to_csv("HBA_bla_1st_parameter_summary.csv")
-
-# # 8. posterior 예측값 y_pred → npy 또는 csv 저장
-# y_pred = fit.stan_variable("y_pred")
-# np.savetxt("HBA_bla_1st_posterior_y_pred.csv", y_pred.reshape(y_pred.shape[0], -1), delimiter=",")  # 구조 변형 후 csv
-
-# # 9. log-likelihood → CSV 또는 npz
-# log_lik = fit.stan_variable("log_lik")
-# np.savetxt("HBA_bla_1st_log_lik.csv", log_lik, delimiter=",")
-
-
-# ### Parameter Recovery
-
-# In[ ]:
-
-
-# 논문 질문 gpt 참고
-
-
-# ## CBM

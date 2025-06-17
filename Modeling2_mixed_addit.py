@@ -389,7 +389,7 @@ stan_data = {
 with open("bldata_mixed.json", "w") as f:
     json.dump(stan_data, f)
 
-model = CmdStanModel(stan_file='happy_Mixed_addit_ind.stan')
+model = CmdStanModel(stan_file='/models/happy_Mixed_addit_ind.stan')
 fit = model.sample(data="bldata_mixed.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 
                    seed=2025, adapt_delta=0.95, max_treedepth=15,
@@ -397,11 +397,10 @@ fit = model.sample(data="bldata_mixed.json", chains=4, parallel_chains=4,
 results = save_stan_outputs_and_evaluation(fit, prefix="Ind_mixed_addit_bla_2nd")
 
 # ## HBA
-model = CmdStanModel(stan_file='happy_Mixed_addit_hba.stan')
+model = CmdStanModel(stan_file='/models/happy_Mixed_addit_hba.stan')
 fit = model.sample(data="bldata_mixed.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 
                    seed=2025, adapt_delta=0.95, max_treedepth=15,
                    show_progress=True)
 results = save_stan_outputs_and_evaluation(fit, prefix="HBA_mixed_addit_bla_2nd")
-print(results["eval_csv"])  # 저장된 평가 지표 파일 경로
 

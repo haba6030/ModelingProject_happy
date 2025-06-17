@@ -7,7 +7,6 @@ import random
 import numpy as np
 import pandas as pd
 import arviz as az
-print(az.__version__)
 
 from scipy.optimize import minimize
 

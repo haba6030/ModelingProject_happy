@@ -337,7 +337,7 @@ stan_data = {
 with open("simulated_blain_1straw_hba.json", "w") as f:
     json.dump(stan_data, f)
 
-model = CmdStanModel(stan_file='happy_2014.stan')
+model = CmdStanModel(stan_file='/models/happy_2014.stan')
 fit = model.sample(data="simulated_blain_1straw_hba.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 
                    seed=2025, adapt_delta=0.95, max_treedepth=15,
@@ -473,7 +473,7 @@ stan_data = {
 with open("simulated_blain_1staddit.json", "w") as f:
     json.dump(stan_data, f)
 
-model = CmdStanModel(stan_file='happy_addit.stan')
+model = CmdStanModel(stan_file='/models/happy_addit.stan')
 
 fit = model.sample(data="simulated_blain_1staddit.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 
@@ -594,7 +594,7 @@ stan_data = {
 with open("simulated_blain_2ndphatppe.json", "w") as f:
     json.dump(stan_data, f)
 
-model = CmdStanModel(stan_file='happy_phatppe_hba.stan')
+model = CmdStanModel(stan_file='/models/happy_phatppe_hba.stan')
 
 fit = model.sample(data="simulated_blain_2ndphatppe.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 
@@ -739,7 +739,7 @@ stan_data = {
 with open("simulated_blain_2ndmixed.json", "w") as f:
     json.dump(stan_data, f)
 
-model = CmdStanModel(stan_file='happy_Mixed_addit_hba.stan')
+model = CmdStanModel(stan_file='/models/happy_Mixed_addit_hba.stan')
 
 fit = model.sample(data="simulated_blain_2ndmixed.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 

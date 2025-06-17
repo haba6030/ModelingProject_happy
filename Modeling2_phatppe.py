@@ -1,24 +1,7 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 from cmdstanpy import install_cmdstan
-install_cmdstan()
-
-
-# In[2]:
-
-
 import os
 from scipy.stats import norm
 from cmdstanpy import CmdStanModel
-
-
-# In[3]:
-
-
 import random
 import numpy as np
 import pandas as pd
@@ -39,54 +22,12 @@ from tqdm import tqdm
 
 
 # # Import data
-
-# In[4]:
-
-
 dfBlInfo = pd.read_csv("combined_participant_info.csv")
-#dfRtInfo = pd.read_csv("Rutledge_info_modified.csv")
-
-
-# In[5]:
-
-
 dfBlTrial = pd.read_csv("Blain_trials_modified.csv")
-#dfRtTrial = pd.read_csv("Rutledge_trials_modified.csv")
-
-
-# In[6]:
-
-
-print(dfBlInfo.shape)
-print(dfBlTrial.shape)
-
-
-# In[7]:
-
-
-dfBlTrial
-
 
 # # Modeling 2 - Introducing PPE(Blain, 2020)
 # Include PPE
-
 # ## Phat + PPE model
-
-# In[8]:
-
-
-# df = dfRtTrial
-# cols_to_fix = ["mag1", "mag2","prob1", "winLose", "happiness"]
-
-# for col in cols_to_fix:
-#     df[col] = pd.to_numeric(df[col], errors="coerce")
-
-# df["mag1_z"] = (df["mag1"] - df["mag1"].mean()) / df["mag1"].std()
-# df["mag2_z"] = (df["mag2"] - df["mag2"].mean()) / df["mag2"].std()
-
-
-# In[9]:
-
 
 df = dfBlTrial
 cols_to_fix = ["mag1", "mag2","prob1", "winLose", "happiness"]
@@ -96,11 +37,7 @@ for col in cols_to_fix:
 
 
 # ### MLE 모델 제작
-
-# In[10]:
-
-
-# 📌 2. Overall model : happiness = phat + ppe
+# 2. Overall model : happiness = phat + ppe
 def predict_happiness(params, Winlose, chose_risky, choice, rated_mask):
     w0, w_phat, w_PPE, gamma, alpha = params
     T = len(Winlose)
@@ -136,7 +73,7 @@ def predict_happiness(params, Winlose, chose_risky, choice, rated_mask):
     return mu
 
 
-# In[11]:
+
 
 
 # 📌 3. Negative loglikelihood
@@ -151,13 +88,7 @@ def nll_rated(params, Winlose, chose_risky, choice, rated_mask, H_obs):
     negloglik = -np.sum(norm.logpdf(H_obs, loc=mu_rated, scale=1.0))  # fixed sigma
     return negloglik
 
-
-# In[12]:
-
-
-from sklearn.metrics import mean_squared_error, r2_score
-
-# 📌 4. Evaluate model
+# 4. Evaluate model
 def evaluate_mle(y_true, y_pred, log_likelihood, k_params):
     n = len(y_true)
     rmse = np.sqrt(mean_squared_error(y_true, y_pred))
@@ -171,10 +102,6 @@ def evaluate_mle(y_true, y_pred, log_likelihood, k_params):
         "aic": aic,
         "bic": bic
     }
-
-
-# In[13]:
-
 
 # 참가자별 MLE
 def fit_mle_per_participant(df_trials, id_x = "id", happiness = "happiness", 
@@ -236,27 +163,6 @@ def fit_mle_per_participant(df_trials, id_x = "id", happiness = "happiness",
     df_eval = pd.DataFrame(eval_list)
     return df_result, df_eval
 
-
-# In[14]:
-
-
-# #Rutledge
-
-# df = dfRtTrial 
-# df_params_Rt, df_eval_Rt = fit_mle_per_participant(df)
-
-
-# In[15]:
-
-
-# # 결과 저장
-# df_params_Rt.to_csv("mle_rut_phat_results.csv", index=False)
-# df_eval_Rt.to_csv("mle_rut_phat_evals.csv", index=False)
-
-
-# In[16]:
-
-
 print("MLE")
 df = dfBlTrial
 df_params, df_eval = fit_mle_per_participant(df)
@@ -267,10 +173,6 @@ df_eval.to_csv("mle_bla_phat_evals.csv", index=False)
 
 
 # ## Individual Bayesian
-
-# In[17]:
-
-
 # Matrix 함수: for json
 def to_matrix(df, varname, fill=0):
     mat = np.full((N, T), fill, dtype=np.float32)
@@ -287,7 +189,7 @@ def to_int_matrix(df, varname, fill=0):
     return mat
 
 
-# In[18]:
+
 
 
 def save_stan_outputs_and_evaluation(fit, prefix="model", trace_chunk_size=20):
@@ -416,10 +318,6 @@ def save_stan_outputs_and_evaluation(fit, prefix="model", trace_chunk_size=20):
         "bic": bic
     }
 
-
-# In[19]:
-
-
 # happiness 관측값 위치 확인
 df = dfBlTrial
 
@@ -446,16 +344,9 @@ for i in range(N):
     if T_temp > T_max:
             T_max = T_temp
 
-
-# In[20]:
-
-
-df = dfBlTrial
-
 participants = df["id"].unique()
 N = len(participants)
 T = df.groupby("id").size().max()  # 160으로 동일
-print(T)
 
 Tsubj = df.groupby("id").size().values.astype(int)
 gamble = to_matrix(df, "choseRisky")
@@ -478,76 +369,26 @@ stan_data = {
 with open("bldata_phatppe.json", "w") as f:
     json.dump(stan_data, f)
 
-
-# In[24]:
-
-
 model = CmdStanModel(stan_file='happy_phatppe_indi.stan')
-
-
-# In[25]:
-
-
 fit = model.sample(data="bldata_phatppe.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 
                    seed=2025, adapt_delta=0.95, max_treedepth=15,
                    show_progress=True)
-
-
-# In[ ]:
-
-
 results = save_stan_outputs_and_evaluation(fit, prefix="Ind_phatppe_bla_2nd")
 print(results["eval_csv"])  # 저장된 평가 지표 파일 경로
 
 
 # ## Hierarchical Bayesian
-
-# In[23]:
-
-
-# model = CmdStanModel(stan_file='happy_phatppe_hba.stan')
-
-
-# In[1]:
-
-
-# fit = model.sample(data="rtdata_phatppe.json", chains=4, parallel_chains=4, 
-#                    iter_warmup=1000, iter_sampling=1000, 
-#                    seed=2025, adapt_delta=0.95, max_treedepth=15,
-#                    show_progress=True)
-
-
-# In[ ]:
-
-
-# results = save_stan_outputs_and_evaluation(fit, prefix="HBA_phatppe_rut_2st")
-# print(results["eval_csv"])  # 저장된 평가 지표 파일 경로
-
-
-# In[4]:
-
-
 model = CmdStanModel(stan_file='happy_phatppe_hba.stan')
-
-
-# In[19]:
-
-
 fit = model.sample(data="bldata_phatppe.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 
                    seed=2025, adapt_delta=0.95, max_treedepth=15,
                    show_progress=True)
 
-
-# In[ ]:
-
-
 results = save_stan_outputs_and_evaluation(fit, prefix="HBA_phatppe_bla_2nd")
-print(results["eval_csv"])  # 저장된 평가 지표 파일 경로
 
 
-# In[ ]:
+
 
 
 

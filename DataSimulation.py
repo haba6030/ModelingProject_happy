@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[18]:
-
-
 from cmdstanpy import CmdStanModel
 from cmdstanpy import install_cmdstan
 install_cmdstan()
@@ -29,10 +23,6 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.feature_selection import SelectFromModel
 
 from tqdm import tqdm
-
-
-# In[19]:
-
 
 def save_stan_outputs_and_evaluation(fit, prefix="model", trace_chunk_size=20):
     # 0. Create output directory
@@ -109,7 +99,6 @@ def save_stan_outputs_and_evaluation(fit, prefix="model", trace_chunk_size=20):
     gen_quant_stats = {}
 
     for var in gen_quant_vars:
-        print(var)
         if var in fit.stan_variables():
             data = fit.stan_variable(var)
             gen_quant_stats[var] = {
@@ -162,17 +151,9 @@ def save_stan_outputs_and_evaluation(fit, prefix="model", trace_chunk_size=20):
 
 
 # # Common variables
-
-# In[20]:
-
-
 N = 75
 T = 160
 rate_happy = 0.25  # 25%만 happiness 응답
-
-
-# In[21]:
-
 
 def minmax_per_participant(matrix):
     normed = np.zeros_like(matrix)
@@ -182,12 +163,7 @@ def minmax_per_participant(matrix):
         normed[i] = (matrix[i] - min_val) / (max_val - min_val)
     return normed
 
-
-# In[22]:
-
-
 cr = np.zeros((N, T))
-
 ## gain loss
 reward_set = [10, 20, 40, 80]
 
@@ -230,10 +206,6 @@ for i in range(N):
 
 gamble = np.zeros((N, T)) + 1
 
-
-# In[23]:
-
-
 # 선택: 0 → option1, 1 → option2
 choice = np.random.randint(0, 2, (N, T)) # 실제 절반 가량 선택하였음
 outcome = np.zeros((N, T))
@@ -255,10 +227,6 @@ for i in range(N):
         else:
             outcome[i, t] = 0
 
-
-# In[24]:
-
-
 # Recover each parameter (75 participants assumed)
 def recover_param(param_prefix):
     base = param_df[param_df["name"].str.contains(f"{param_prefix}\\[")]
@@ -266,10 +234,6 @@ def recover_param(param_prefix):
     base_vals = base["Mean"].values
     recovered = base_vals
     return recovered
-
-
-# In[25]:
-
 
 # SD도 함께 복원할 함수
 def recover_param_with_sd(param_prefix):
@@ -281,11 +245,7 @@ def recover_param_with_sd(param_prefix):
     return base_vals, base_stds
 
 
-# # 1st Raw
-
-# In[26]:
-
-
+# 1st Raw
 # Load newly uploaded file to extract all required parameters
 param_df = pd.read_csv("outputs/HBA_raw_bla_1st_parameter_summary.csv")
 
@@ -306,21 +266,7 @@ recovered_df = pd.DataFrame({
     "gamma": gamma_recov
 })
 
-
-# In[27]:
-
-
-recovered_df
-
-
-# In[28]:
-
-
 recovered_df.to_csv("outputs/simulation/HBA_raw_bla_1st_original_parameters.csv")
-
-
-# In[29]:
-
 
 # 파라미터 ground truth
 true_w0 = recovered_df["w0"]
@@ -330,17 +276,9 @@ true_w3 = recovered_df["w3"]
 
 true_gamma = recovered_df["gamma"]
 
-
-# In[30]:
-
-
 i_vec = []
 t_vec = []
 T_temp = 0
-
-
-# In[31]:
-
 
 # happy 계산
 happy = np.full((N, T), -999.0)
@@ -377,10 +315,6 @@ for i in range(N):
                  )
             happy[i, t] = np.random.normal(mu, 1.0)
 
-
-# In[32]:
-
-
 Tsubj = [T for _ in range(N)]
 
 stan_data = {
@@ -403,31 +337,12 @@ stan_data = {
 with open("simulated_blain_1straw_hba.json", "w") as f:
     json.dump(stan_data, f)
 
-
-# In[33]:
-
-
 model = CmdStanModel(stan_file='happy_2014.stan')
-
-
-# In[ ]:
-
-
 fit = model.sample(data="simulated_blain_1straw_hba.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 
                    seed=2025, adapt_delta=0.95, max_treedepth=15,
                    show_progress=True)
-
-
-# In[ ]:
-
-
 results = save_stan_outputs_and_evaluation(fit, prefix="HBA_raw_bla_1st")
-print(results["eval_csv"])  # 저장된 평가 지표 파일 경로
-
-
-# In[ ]:
-
 
 # Load newly uploaded file to extract all required parameters
 param_df = pd.read_csv("outputs/simulation/HBA_raw_bla_1st_parameter_summary.csv")
@@ -447,25 +362,10 @@ recovered_df = pd.DataFrame({
     "w3": w3_mean, "w3_sd": w3_sd,
     "gamma": gamma_mean, "gamma_sd": gamma_sd,
 })
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
 recovered_df.to_csv("outputs/simulation/HBA_raw_bla_1st_simulated_parameters.csv")
 
 
-# # 1st addit
-
-# In[ ]:
-
-
+# 1st addit
 # Load newly uploaded file to extract all required parameters
 param_df = pd.read_csv("outputs/HBA_addit_bla_1st_parameter_summary.csv")
 
@@ -489,22 +389,7 @@ recovered_df = pd.DataFrame({
     "gamma": gamma_recov,
     "alpha": alpha_recov
 })
-
-
-# In[ ]:
-
-
 recovered_df.to_csv("outputs/simulation/HBA_addit_bla_1st_original_parameters.csv")
-
-
-# In[ ]:
-
-
-recovered_df
-
-
-# In[ ]:
-
 
 # 파라미터 ground truth
 true_w0 = recovered_df["w0"]
@@ -514,10 +399,6 @@ true_w3 = recovered_df["w3"]
 
 true_gamma = recovered_df["gamma"]
 true_alpha = recovered_df["alpha"]
-
-
-# In[ ]:
-
 
 i_vec = []
 t_vec = []
@@ -568,9 +449,6 @@ for i in range(N):
             happy[i, t] = np.random.normal(mu, 1.0)
 
 
-# In[ ]:
-
-
 Tsubj = [T for _ in range(N)]
 
 stan_data = {
@@ -595,73 +473,38 @@ stan_data = {
 with open("simulated_blain_1staddit.json", "w") as f:
     json.dump(stan_data, f)
 
-
-# In[ ]:
-
-
 model = CmdStanModel(stan_file='happy_addit.stan')
 
+fit = model.sample(data="simulated_blain_1staddit.json", chains=4, parallel_chains=4, 
+                   iter_warmup=1000, iter_sampling=1000, 
+                   seed=2025, adapt_delta=0.95, max_treedepth=15,
+                   show_progress=True)
 
-# In[ ]:
+results = save_stan_outputs_and_evaluation(fit, prefix="HBA_addit_bla_1st")
+# Load newly uploaded file to extract all required parameters
+param_df = pd.read_csv("outputs/simulation/HBA_addit_bla_1st_parameter_summary.csv")
 
+# Recover w0 to w3
+w0_mean, w0_sd = recover_param_with_sd("w0")
+w1_mean, w1_sd = recover_param_with_sd("w1")
+w2_mean, w2_sd = recover_param_with_sd("w2")
+w3_mean, w3_sd = recover_param_with_sd("w3")
+gamma_mean, gamma_sd = recover_param_with_sd("gam")
+alpha_mean, alpha_sd = recover_param_with_sd("alpha")
 
-# fit = model.sample(data="simulated_blain_1staddit.json", chains=4, parallel_chains=4, 
-#                    iter_warmup=1000, iter_sampling=1000, 
-#                    seed=2025, adapt_delta=0.95, max_treedepth=15,
-#                    show_progress=True)
-
-
-# In[ ]:
-
-
-# results = save_stan_outputs_and_evaluation(fit, prefix="HBA_addit_bla_1st")
-# print(results["eval_csv"])  # 저장된 평가 지표 파일 경로
-
-
-# In[ ]:
-
-
-# # Load newly uploaded file to extract all required parameters
-# param_df = pd.read_csv("outputs/simulation/HBA_addit_bla_1st_parameter_summary.csv")
-
-# # Recover w0 to w3
-# w0_mean, w0_sd = recover_param_with_sd("w0")
-# w1_mean, w1_sd = recover_param_with_sd("w1")
-# w2_mean, w2_sd = recover_param_with_sd("w2")
-# w3_mean, w3_sd = recover_param_with_sd("w3")
-
-# gamma_mean, gamma_sd = recover_param_with_sd("gam")
-
-# alpha_mean, alpha_sd = recover_param_with_sd("alpha")
-
-# recovered_df = pd.DataFrame({
-#     "participant": np.arange(1, len(w0_mean) + 1),
-#     "w0": w0_mean, "w0_sd": w0_sd,
-#     "w1": w1_mean, "w1_sd": w1_sd,
-#     "w2": w2_mean, "w2_sd": w2_sd,
-#     "w3": w3_mean, "w3_sd": w3_sd,
-#     "gamma": gamma_mean, "gamma_sd": gamma_sd,
-#     "alpha": alpha_mean, "alpha_sd": alpha_sd,
-# })
+recovered_df = pd.DataFrame({
+    "participant": np.arange(1, len(w0_mean) + 1),
+    "w0": w0_mean, "w0_sd": w0_sd,
+    "w1": w1_mean, "w1_sd": w1_sd,
+    "w2": w2_mean, "w2_sd": w2_sd,
+    "w3": w3_mean, "w3_sd": w3_sd,
+    "gamma": gamma_mean, "gamma_sd": gamma_sd,
+    "alpha": alpha_mean, "alpha_sd": alpha_sd,
+})
+recovered_df.to_csv("outputs/simulation/HBA_addit_bla_1st_simulated_parameters.csv")
 
 
-# In[ ]:
-
-
-# recovered_df
-
-
-# In[ ]:
-
-
-# recovered_df.to_csv("outputs/simulation/HBA_addit_bla_1st_simulated_parameters.csv")
-
-
-# # 2nd phat ppe
-
-# In[ ]:
-
-
+# 2nd phat ppe
 # Load newly uploaded file to extract all required parameters
 param_df = pd.read_csv("outputs/HBA_phatppe_bla_2nd_parameter_summary.csv")
 
@@ -683,16 +526,7 @@ recovered_df = pd.DataFrame({
     "gamma": gamma_recov,
     "alpha": alpha_recov
 })
-
-
-# In[ ]:
-
-
 recovered_df.to_csv("outputs/simulation/HBA_phatppe_bla_2nd_original_parameters.csv")
-
-
-# In[ ]:
-
 
 # 파라미터 ground truth
 true_w0 = recovered_df["w0"]
@@ -701,10 +535,6 @@ true_w2 = recovered_df["w2"]
 
 true_gamma = recovered_df["gamma"]
 true_alpha = recovered_df["alpha"]
-
-
-# In[ ]:
-
 
 i_vec = []
 t_vec = []
@@ -764,65 +594,36 @@ stan_data = {
 with open("simulated_blain_2ndphatppe.json", "w") as f:
     json.dump(stan_data, f)
 
+model = CmdStanModel(stan_file='happy_phatppe_hba.stan')
 
-# In[ ]:
+fit = model.sample(data="simulated_blain_2ndphatppe.json", chains=4, parallel_chains=4, 
+                   iter_warmup=1000, iter_sampling=1000, 
+                   seed=2025, adapt_delta=0.95, max_treedepth=15,
+                   show_progress=True)
+results = save_stan_outputs_and_evaluation(fit, prefix="HBA_phatppe_bla_2nd")
 
+# Load newly uploaded file to extract all required parameters
+param_df = pd.read_csv("outputs/simulation/HBA_phatppe_bla_2nd_parameter_summary.csv")
 
-# model = CmdStanModel(stan_file='happy_phatppe_hba.stan')
+# Recover w0 to w3
+w0_mean, w0_sd = recover_param_with_sd("w0")
+w1_mean, w1_sd = recover_param_with_sd("w1")
+w2_mean, w2_sd = recover_param_with_sd("w2")
+gamma_mean, gamma_sd = recover_param_with_sd("gam")
+alpha_mean, alpha_sd = recover_param_with_sd("alpha")
 
-
-# In[ ]:
-
-
-# fit = model.sample(data="simulated_blain_2ndphatppe.json", chains=4, parallel_chains=4, 
-#                    iter_warmup=1000, iter_sampling=1000, 
-#                    seed=2025, adapt_delta=0.95, max_treedepth=15,
-#                    show_progress=True)
-
-
-# In[ ]:
-
-
-# results = save_stan_outputs_and_evaluation(fit, prefix="HBA_phatppe_bla_2nd")
-# print(results["eval_csv"])  # 저장된 평가 지표 파일 경로
-
-
-# In[ ]:
-
-
-# # Load newly uploaded file to extract all required parameters
-# param_df = pd.read_csv("outputs/simulation/HBA_phatppe_bla_2nd_parameter_summary.csv")
-
-# # Recover w0 to w3
-# w0_mean, w0_sd = recover_param_with_sd("w0")
-# w1_mean, w1_sd = recover_param_with_sd("w1")
-# w2_mean, w2_sd = recover_param_with_sd("w2")
-
-# gamma_mean, gamma_sd = recover_param_with_sd("gam")
-
-# alpha_mean, alpha_sd = recover_param_with_sd("alpha")
-
-# recovered_df = pd.DataFrame({
-#     "participant": np.arange(1, len(w0_mean) + 1),
-#     "w0": w0_mean, "w0_sd": w0_sd,
-#     "w1": w1_mean, "w1_sd": w1_sd,
-#     "w2": w2_mean, "w2_sd": w2_sd,
-#     "gamma": gamma_mean, "gamma_sd": gamma_sd,
-#     "alpha": alpha_mean, "alpha_sd": alpha_sd,
-# })
+recovered_df = pd.DataFrame({
+    "participant": np.arange(1, len(w0_mean) + 1),
+    "w0": w0_mean, "w0_sd": w0_sd,
+    "w1": w1_mean, "w1_sd": w1_sd,
+    "w2": w2_mean, "w2_sd": w2_sd,
+    "gamma": gamma_mean, "gamma_sd": gamma_sd,
+    "alpha": alpha_mean, "alpha_sd": alpha_sd,
+})
+recovered_df.to_csv("outputs/simulation/HBA_phatppe_bla_2nd_simulated_parameters.csv")
 
 
-# In[ ]:
-
-
-# recovered_df.to_csv("outputs/simulation/HBA_phatppe_bla_2nd_simulated_parameters.csv")
-
-
-# # 2nd mixed addit
-
-# In[ ]:
-
-
+# 2nd mixed addit
 # Load newly uploaded file to extract all required parameters
 param_df = pd.read_csv("outputs/HBA_mixed_addit_bla_2nd_parameter_summary.csv")
 
@@ -851,15 +652,7 @@ recovered_df = pd.DataFrame({
     "alpha": alpha_recov
 })
 
-
-# In[ ]:
-
-
 recovered_df.to_csv("outputs/simulation/HBA_mixed_addit_bla_2nd_original_parameters.csv")
-
-
-# In[ ]:
-
 
 # 파라미터 ground truth
 true_w0 = recovered_df["w0"]
@@ -870,10 +663,6 @@ true_w4 = recovered_df["w4"]
 
 true_gamma = recovered_df["gamma"]
 true_alpha = recovered_df["alpha"]
-
-
-# In[ ]:
-
 
 i_vec = []
 t_vec = []
@@ -928,10 +717,6 @@ for i in range(N):
                  )
             happy[i, t] = np.random.normal(mu, 1.0)
 
-
-# In[ ]:
-
-
 Tsubj = [T for _ in range(N)]
 
 stan_data = {
@@ -954,31 +739,15 @@ stan_data = {
 with open("simulated_blain_2ndmixed.json", "w") as f:
     json.dump(stan_data, f)
 
-
-# In[ ]:
-
-
 model = CmdStanModel(stan_file='happy_Mixed_addit_hba.stan')
-
-
-# In[ ]:
-
 
 fit = model.sample(data="simulated_blain_2ndmixed.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 
                    seed=2025, adapt_delta=0.95, max_treedepth=15,
                    show_progress=True)
 
-
-# In[ ]:
-
-
 results = save_stan_outputs_and_evaluation(fit, prefix="HBA_mixed_addit_bla_2nd")
 print(results["eval_csv"])  # 저장된 평가 지표 파일 경로
-
-
-# In[ ]:
-
 
 # Load newly uploaded file to extract all required parameters
 param_df = pd.read_csv("outputs/simulation/HBA_mixed_addit_bla_2nd_parameter_summary.csv")
@@ -1004,10 +773,6 @@ recovered_df = pd.DataFrame({
     "gamma": gamma_mean, "gamma_sd": gamma_sd,
     "alpha": alpha_mean, "alpha_sd": alpha_sd,
 })
-
-
-# In[ ]:
-
 
 recovered_df.to_csv("outputs/simulation/HBA_mixed_addit_bla_2nd_simulated_parameters.csv")
 

@@ -1,24 +1,8 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 from cmdstanpy import install_cmdstan
 install_cmdstan()
-
-
-# In[2]:
-
-
 import os
 from scipy.stats import norm
 from cmdstanpy import CmdStanModel
-
-
-# In[3]:
-
-
 import random
 import numpy as np
 import pandas as pd
@@ -39,48 +23,22 @@ from tqdm import tqdm
 
 
 # # Import data and Preprocess
-
-# In[4]:
-
-
 dfBlInfo = pd.read_csv("combined_participant_info.csv")
 dfBlTrial = pd.read_csv("Blain_trials_modified.csv")
 
 # DO as happy[i, t] ~ normal(w0 * BDI[i] + other_terms, sigma)
-
-
-# In[5]:
-
-
-dfBlTrial
-
-
-# In[6]:
-
-
-print(str(dfBlInfo["id"]))
 bdi_raw = dfBlInfo["BDI_bdi_score"]
-print(bdi_raw)
-
-
-# In[7]:
-
 
 # BDI Normalization as continuous variable
 bdi_min, bdi_max = bdi_raw.min(), bdi_raw.max()
 
-# Apply min-max normalization to [0, 1] scale
+# Apply min-max normalization to [-1, 1] scale
 bdiScore = 2 * (bdi_raw - bdi_min) / (bdi_max - bdi_min) - 1
 print(bdiScore)
 
 
-# # Modeling - PhatPPE
-
-# ### Data (json)
-
-# In[8]:
-
-
+# Modeling - PhatPPE
+### Data (json)
 # Matrix 함수: for json
 def to_matrix(df, varname, fill=0):
     mat = np.full((N, T), fill, dtype=np.float32)
@@ -97,7 +55,7 @@ def to_int_matrix(df, varname, fill=0):
     return mat
 
 
-# In[9]:
+
 
 
 def save_stan_outputs_and_evaluation(fit, prefix="model", trace_chunk_size=20):
@@ -226,10 +184,6 @@ def save_stan_outputs_and_evaluation(fit, prefix="model", trace_chunk_size=20):
         "bic": bic
     }
 
-
-# In[10]:
-
-
 # happiness 관측값 위치 확인
 df = dfBlTrial
 
@@ -256,17 +210,11 @@ for i in range(N):
     if T_temp > T_max:
             T_max = T_temp
 
-
-# In[11]:
-
-
 df = dfBlTrial
 
 participants = df["id"].unique()
 N = len(participants)
 T = df.groupby("id").size().max()  # 160으로 동일
-print(T)
-
 Tsubj = df.groupby("id").size().values.astype(int)
 gamble = to_matrix(df, "choseRisky")
 winLose = to_matrix(df, "winLose")
@@ -290,25 +238,17 @@ with open("bldata_bdi.json", "w") as f:
     json.dump(stan_data, f)
 
 
-# ## Dep difference
+## Dep difference
 # W = mu + beta * dep + sigma * raw
 
-# ### MLE
-
-# In[43]:
-
-
+### MLE
 df = dfBlTrial
 cols_to_fix = ["mag1", "mag2","prob1", "winLose", "happiness"]
 
 for col in cols_to_fix:
     df[col] = pd.to_numeric(df[col], errors="coerce")
 
-
-# In[44]:
-
-
-# 📌 2. Overall model : happiness = phat + ppe
+# 2. Overall model : happiness = phat + ppe
 def predict_happiness(params, Winlose, chose_risky, choice, bdiScore, rated_mask):
     w0, mu_phat, bdi_phat, mu_PPE, bdi_PPE, gamma, alpha = params
     T = len(Winlose)
@@ -346,11 +286,7 @@ def predict_happiness(params, Winlose, chose_risky, choice, bdiScore, rated_mask
     mu = w0 + w_phat * phat_decay + w_PPE * PPE_decay
     return mu
 
-
-# In[45]:
-
-
-# 📌 3. Negative loglikelihood
+# 3. Negative loglikelihood
 def nll_rated(params, Winlose, chose_risky, choice, bdiScore, rated_mask, H_obs):
     w0, mu_phat, bdi_phat, mu_PPE, bdi_PPE, gamma, alpha = params
     if not (0 <= gamma <= 1 and 0 <= alpha <= 1):
@@ -362,13 +298,7 @@ def nll_rated(params, Winlose, chose_risky, choice, bdiScore, rated_mask, H_obs)
     negloglik = -np.sum(norm.logpdf(H_obs, loc=mu_rated, scale=1.0))  # fixed sigma
     return negloglik
 
-
-# In[46]:
-
-
-from sklearn.metrics import mean_squared_error, r2_score
-
-# 📌 4. Evaluate model
+# 4. Evaluate model
 def evaluate_mle(y_true, y_pred, log_likelihood, k_params):
     n = len(y_true)
     rmse = np.sqrt(mean_squared_error(y_true, y_pred))
@@ -382,10 +312,6 @@ def evaluate_mle(y_true, y_pred, log_likelihood, k_params):
         "aic": aic,
         "bic": bic
     }
-
-
-# In[55]:
-
 
 # 참가자별 MLE
 def fit_mle_per_participant(df_trials, bdiScores, id_x = "id", happiness = "happiness", 
@@ -456,10 +382,6 @@ def fit_mle_per_participant(df_trials, bdiScores, id_x = "id", happiness = "happ
     df_eval = pd.DataFrame(eval_list)
     return df_result, df_eval
 
-
-# In[56]:
-
-
 print("MLE")
 df = dfBlTrial
 df_params, df_eval = fit_mle_per_participant(df, bdiScores = bdiScore)
@@ -469,26 +391,11 @@ df_params.to_csv("mle_bdionly_results.csv", index=False)
 df_eval.to_csv("mle_bdionly_evals.csv", index=False)
 
 
-# ### HBA
-
-# In[15]:
-
-
-model = CmdStanModel(stan_file='happy_phatppe_bdionly.stan')
-
-
-# In[12]:
-
-
+### HBA
+model = CmdStanModel(stan_file='/models/happy_phatppe_bdionly.stan')
 fit = model.sample(data="bldata_bdi.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 
                    seed=2025, adapt_delta=0.95, max_treedepth=15,
                    show_progress=True)
 
-
-# In[ ]:
-
-
 results = save_stan_outputs_and_evaluation(fit, prefix="HBA_BDIonly_bla_3rd")
-print(results["eval_csv"])  # 저장된 평가 지표 파일 경로
-

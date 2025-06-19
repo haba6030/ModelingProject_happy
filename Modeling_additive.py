@@ -402,7 +402,7 @@ def save_stan_outputs_and_evaluation(fit, prefix="model", trace_chunk_size=20):
 # ### 예측 시작
 
 # #### Blain
-model = CmdStanModel(stan_file='/models/happy_addit_indiv.stan')
+model = CmdStanModel(stan_file='models/happy_addit_indiv.stan')
 fit = model.sample(data="bldata_1st_addit.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 
                    seed=2025, adapt_delta=0.95, max_treedepth=15,
@@ -410,7 +410,7 @@ fit = model.sample(data="bldata_1st_addit.json", chains=4, parallel_chains=4,
 results = save_stan_outputs_and_evaluation(fit, prefix="Ind_addit_bla_1st")
 
 # ## HBA
-model = CmdStanModel(stan_file='/models/happy_addit.stan')
+model = CmdStanModel(stan_file='models/happy_addit.stan')
 fit = model.sample(data="bldata_1st_addit.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 
                    seed=2025, adapt_delta=0.95, max_treedepth=15,

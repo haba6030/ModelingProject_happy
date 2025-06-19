@@ -15,6 +15,11 @@ Modeling2_mixed.py: subjective mixed model
 
 Codes include MLE, individual bayesian and hierarchical bayesian estimation. 
 
+You can run those code by using python command as below.
+'''
+python Modeling.py
+'''
+
 ## Data simulation and parameter recovery analysis
 To run DataSimulation file, files containing estimated parameters should be included in /outputs folder. 
 Also, for RecoveryAnalysis file, original and simulated parameter information csv file should be included in the same folder 

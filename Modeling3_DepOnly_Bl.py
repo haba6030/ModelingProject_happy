@@ -392,7 +392,7 @@ df_eval.to_csv("mle_bdionly_evals.csv", index=False)
 
 
 ### HBA
-model = CmdStanModel(stan_file='/models/happy_phatppe_bdionly.stan')
+model = CmdStanModel(stan_file='models/happy_phatppe_bdionly.stan')
 fit = model.sample(data="bldata_bdi.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 
                    seed=2025, adapt_delta=0.95, max_treedepth=15,

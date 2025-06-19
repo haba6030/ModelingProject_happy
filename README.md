@@ -2,7 +2,9 @@
 Repository for term project of Experimental Seminar: Computational Modeling
 
 ## DataPreprocessing and Modification
-!! These files are unnecessary to run, csv files are processed datasets. Just for informing the preprocessing methods !!
+Running these files will cause errors. Processed csv files are already in the repo.
+They are just for informing the preprocessing methods
+
 Preprocessing includes changing the mat file to csv files.
 Modifcation includes normalization and labeling process for each variable.
 

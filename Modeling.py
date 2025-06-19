@@ -388,7 +388,7 @@ def save_stan_outputs_and_evaluation(fit, prefix="model", trace_chunk_size=20):
 ### 예측 시작
 
 #### Blain
-model = CmdStanModel(stan_file='/models/happy_2014_indiv.stan')
+model = CmdStanModel(stan_file='models/happy_2014_indiv.stan')
 
 fit = model.sample(data="bldata_1st.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 
@@ -401,7 +401,7 @@ print(results["eval_csv"])  # 저장된 평가 지표 파일 경로
 ## HBA
 
 ### Stan Compile
-model = CmdStanModel(stan_file='/models/happy_2014.stan')
+model = CmdStanModel(stan_file='models/happy_2014.stan')
 fit = model.sample(data="bldata_1st.json", chains=4, parallel_chains=4, 
                    iter_warmup=1000, iter_sampling=1000, 
                    seed=2025, adapt_delta=0.95, max_treedepth=15,
